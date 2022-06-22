@@ -1,5 +1,5 @@
 const makeWaSocket = require('@adiwajshing/baileys').default;
-const { delay, useSingleFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@adiwajshing/baileys');
+const { delay, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@adiwajshing/baileys');
 const P = require('pino');
 const { unlink, existsSync, mkdirSync, readFileSync, chownSync } = require('fs');
 const express = require('express');
@@ -10,6 +10,9 @@ const app = express();
 const server = http.createServer(app);
 const ZDGPath = './ZDGSessions/';
 const ZDGAuth = 'auth_info.json';
+
+
+
 app.use(express.json());
 app.use(express.urlencoded({
   extended: true
@@ -50,9 +53,9 @@ const ZDGConnection = async () => {
       mkdirSync(ZDGPath, { recursive: true });
    }
    //                   analisar essa função com o leo 
-   const { saveState, state } = useSingleFileAuthState(ZDGPath + ZDGAuth)
-   // console.log(saveState)
-   // console.log(state)
+   const { saveCreds, state } = await useMultiFileAuthState('./ZDGSessions')
+   console.log(saveCreds)
+   console.log(state)
    const config = {
       auth: state,
       logger: P({ level: 'error' }),
@@ -70,7 +73,7 @@ const ZDGConnection = async () => {
    // função onde sera definido que ira acontecer quando o script rodar
    ZDGUpdate(ZDGsock.ev);
   // função aparentemente usada para salvar a autenticação 
-   ZDGsock.ev.on('creds.update', saveState);
+   ZDGsock.ev.on('creds.update', saveCreds);
 
    const ZDGSendMessage = async (jid, msg) => {
       await ZDGsock.presenceSubscribe(jid)
