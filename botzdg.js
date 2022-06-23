@@ -1,11 +1,11 @@
 const makeWaSocket = require('@adiwajshing/baileys').default;
 const { delay, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@adiwajshing/baileys');
 const P = require('pino');
-const { unlink, existsSync, mkdirSync, readFileSync, chownSync } = require('fs');
+const {  existsSync, mkdirSync, readFileSync, chownSync, rm } = require('fs');
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const http = require('http');
-const port = process.env.PORT || 8080 ;
+const port = process.env.PORT || 8000 ;
 const app = express();
 const server = http.createServer(app);
 const ZDGPath = './ZDGSessions/';
@@ -32,8 +32,8 @@ const ZDGUpdate = (ZDGsock) => {
          console.log(`© BOT-ZDG - CONEXÃO FECHADA! RAZÃO: ` + DisconnectReason.loggedOut.toString());
          // condicao para remover o arquivo de autenticação
          if (ZDGReconnect === false) {
-            const removeAuth = ZDGPath + ZDGAuth
-            unlink(removeAuth, err => {
+            const removeAuth = ZDGPath // + ZDGAuth
+            rm(removeAuth, {recursive: true},  err => {
                if (err) throw err
             })
          }
@@ -54,8 +54,8 @@ const ZDGConnection = async () => {
    }
    //                   analisar essa função com o leo 
    const { saveCreds, state } = await useMultiFileAuthState('./ZDGSessions')
-   console.log(saveCreds)
-   console.log(state)
+   // console.log(saveCreds)
+   // console.log(state)
    const config = {
       auth: state,
       logger: P({ level: 'error' }),
@@ -66,7 +66,7 @@ const ZDGConnection = async () => {
          return { conversation: 'botzg' };
       },
    }
-   // console.log(config)
+   console.log(config.auth)
    // analisar com leo
    const ZDGsock = makeWaSocket(config);
    // console.log(ZDGsock)
@@ -108,7 +108,7 @@ const ZDGConnection = async () => {
       const message = req.body.message;
 
       if (numberDDI !== '55') {
-         ZDGSendMessage(jid, { text: message }).then(response => {
+        await ZDGSendMessage(jid, { text: message }).then(response => {
             res.status(200).json({
                status: true,
                response: response
@@ -122,7 +122,7 @@ const ZDGConnection = async () => {
       }
       if (numberDDI === '55' && numberDDD <= 30) {
          const numberZDG = "55" + numberDDD + "9" + numberUser + "@s.whatsapp.net";
-         ZDGSendMessage(numberZDG, { text: message }).then(response => {
+        await ZDGSendMessage(numberZDG, { text: message }).then(response => {
             res.status(200).json({
                status: true,
                response: response
@@ -136,7 +136,7 @@ const ZDGConnection = async () => {
       }
       if (numberDDI === '55' && numberDDD > 30) {
          const numberZDG = "55" + numberDDD + numberUser + "@s.whatsapp.net";
-         ZDGSendMessage(numberZDG, { text: message }).then(response => {
+       await  ZDGSendMessage(numberZDG, { text: message }).then(response => {
             res.status(200).json({
                status: true,
                response: response
