@@ -13,8 +13,6 @@ const server = http.createServer(app);
 const ZDGPath = './ZDGSessions/';
 const ZDGAuth = 'auth_info.json';
 
-
-
 app.use(express.json());
 app.use(express.urlencoded({
   extended: true
@@ -89,17 +87,20 @@ const ZDGConnection = async () => {
    }
 
    // Send message
-   app.post('/zdg-message', [
+   app.post('/whatsapp-message', [
       body('jid').notEmpty(),
       body('message').notEmpty(),
-      body('footer').notEmpty(),
-      body('id1').notEmpty(),
-      body('id2').notEmpty(),
-      body('id3').notEmpty(),
-      body('displaytext1').notEmpty(),
-      body('displaytext2').notEmpty(),
-      body('displaytext3').notEmpty(),
-      body('img').notEmpty(),
+      body('messagelink'),
+      body('link'),
+      body('footer'),
+      body('img'),
+      body('id1'),
+      body('id2'),
+      body('id3'),
+      body('displaytext1'),
+      body('displaytext2'),
+      body('displaytext3'),
+      body('displaytextcall'),
    ], async (req, res) => {
       const errors = validationResult(req).formatWith(({
       msg
@@ -112,35 +113,105 @@ const ZDGConnection = async () => {
          message: errors.mapped()
       });
       }
-   
+   // MANDATORY
       const jid = req.body.jid;
       const numberDDI = jid.substr(0, 2);
       const numberDDD = jid.substr(2, 2);
       const numberUser = jid.substr(-8, 8);
-      const img = req.body.img
       const message = req.body.message;
+      // OPTIONALS
+      const img = req.body.img
+      const messageLink = req.body.messagelink;
+      const link = req.body.link
       const footer = req.body.footer;
       const id1 = req.body.id1;
       const id2 = req.body.id2;
       const id3 = req.body.id3;
-      const displaytext1 = req.body.displaytext1;
-      const displaytext2 = req.body.displaytext2;
-      const displaytext3 = req.body.displaytext3;
-      const buttons = [
-         { buttonId: id1, buttonText: { displayText: displaytext1 }, type: 1 },
-         { buttonId: id2, buttonText: { displayText: displaytext2 }, type: 1 },
-         { buttonId: id3, buttonText: { displayText: displaytext3 }, type: 1 },
-      ]
-       
-       const templateMessage = {
-         //   image: {url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_PrTc4pn62Z_SdzMI-ZcOJ0afnoskVAo1rQ&usqp=CAU'},
-           image: {url: img},
-           caption: message,
-           footer: footer,
-           buttons: buttons,
-           headerType: 4
-       }
+      const displayText1 = req.body.displaytext1;
+      const displayText2 = req.body.displaytext2;
+      const displayText3 = req.body.displaytext3;
+      const displayTextCall = req.body.displaytextcall
 
+      // const numberToCall = jid
+
+      // let numberToCall = ''
+      // if(numberDDI != '55') {
+      //    numberToCall = jid
+      // } 
+      // if (numberDDI === '55' && numberDDD <= 30); {
+      //    numberToCall = `${numberDDI}${numberDDD}9${numberUser}`
+      // } 
+      // if(numberDDI === '55' && numberDDD > 30); {
+      //    numberToCall = `${numberDDI}${numberDDD}${numberUser}`
+      // } 
+   
+      // const templateButtons = [
+      //    {index: 1, urlButton: {displayText: messageLink, url: link}},
+      //    {index: 2, callButton: {displayText: 'Call me!', phoneNumber: '+1 (234) 5678-901'}},
+      //  ]
+
+       // TEMPLATE MESSAGE
+      //  const templateMessage = {
+      //      image: {url: img},
+      //      caption: message,
+      //      footer: footer,
+      //      templateButtons: templateButtons,
+      //      headerType: 4
+      //  }
+      
+      const testMessage = {
+         caption: "Hi it's message",
+         footer: 'Hello World',
+         image: {url: 'https://trato.tech/wp-content/uploads/2021/01/austin-distel-rxpThOwuVgE-unsplash-1536x864.jpg'},
+         // buttons: buttons,
+         // headerType: 4
+     }
+      let templateMessage = {} 
+      // MODELO 1
+      if(id1 && id2 && id3 && displayText1 && displayText2 && displayText3 && img && footer ) {
+         const buttons = [
+            { buttonId: id1, buttonText: { displayText: displayText1 }, type: 1 },
+            { buttonId: id2, buttonText: { displayText: displayText2 }, type: 1 },
+            { buttonId: id3, buttonText: { displayText: displayText3 }, type: 1 },
+         ]
+
+         templateMessage = {
+            image:{url: `${img}`},
+            caption: message,
+            footer: footer,
+            buttons: buttons,
+            headerType: 4,
+         }
+        
+      } 
+
+
+      // MODELO 2
+      if( messageLink && link && displayTextCall && img && footer !== undefined) {
+      // console.log('messageLink: ', messageLink)
+      // console.log('link: ', link)
+      // console.log('displaytextcall: ', displayTextCall)
+      // console.log('img: ', img)
+      // console.log('footer: ', footer)
+      const templateButtons = [
+         {index: 1, urlButton: {displayText: messageLink, url: link}},
+         {index: 2, callButton: {displayText: displayTextCall, phoneNumber: '31 985049409'}},
+       ]
+       templateMessage = {
+         image:{url: `${img}`},
+         caption: message,
+         footer: footer,
+         templateButtons: templateButtons,
+         headerType: 4,
+      }
+      }
+
+
+      // "PADRÃO"
+      // if(img) templateMessage.image = {url: `${img}`}; 
+      // if(footer) templateMessage.footer = footer; 
+      // templateMessage.text = message
+      // console.log(templateMessage)
 
 
       if (numberDDI !== '55') {
@@ -173,7 +244,8 @@ const ZDGConnection = async () => {
       if (numberDDI === '55' && numberDDD > 30) {
          const numberZDG = "55" + numberDDD + numberUser + "@s.whatsapp.net";
        await  ZDGSendMessage(numberZDG, templateMessage).then(response => {
-         // console.log(response)
+      //  console.log(img)
+       console.log(templateMessage)
             res.status(200).json({
                status: true,
                response: response
