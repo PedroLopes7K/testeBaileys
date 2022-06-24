@@ -155,7 +155,7 @@ const ZDGConnection = async () => {
       }
 
    });
-   
+
    app.post('/whatsapp-imagewithmessage', [
     body('jid').notEmpty(),
     body('message').notEmpty(),
@@ -482,10 +482,12 @@ const ZDGConnection = async () => {
 
    });
 
+   
+
 }
 
 ZDGConnection()
 
 server.listen(port, function() {
-   console.log('© BOT-ZDG - Servidor rodando na porta: ' + port);
+   console.log('© BOT-TRATO - Servidor rodando na porta: ' + port);
  });
